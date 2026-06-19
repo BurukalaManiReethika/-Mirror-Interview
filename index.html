@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -54,11 +53,36 @@
         <h2>Story bank</h2>
         <span id="entry-count" class="count-badge">0 answers saved</span>
       </div>
+
+      <input id="search-input" placeholder="Search your saved answers..." />
+
+      <div class="bank-actions">
+        <button id="export-btn">Export JSON</button>
+        <button id="import-btn">Import JSON</button>
+        <input type="file" id="import-file" accept="application/json" class="hidden" />
+      </div>
+
       <div id="bank-list" class="bank-list">
         <p class="empty-state">No answers saved yet. Practice one on the left to start building your bank.</p>
       </div>
     </section>
   </main>
+
+  <div id="edit-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <h3>Edit answer</h3>
+      <label for="edit-theme">Theme</label>
+      <input id="edit-theme" />
+      <label for="edit-question">Question</label>
+      <input id="edit-question" />
+      <label for="edit-answer">Answer</label>
+      <textarea id="edit-answer" rows="6"></textarea>
+      <div class="actions">
+        <button id="edit-cancel">Cancel</button>
+        <button id="edit-save" class="primary">Save changes</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
