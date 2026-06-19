@@ -281,3 +281,84 @@ button.primary:hover { background: #d9ab5f; }
 }
 
 .entry-card .delete:hover { color: #d98c8c; }
+
+.entry-card .edit {
+  background: none;
+  border: none;
+  color: var(--brass);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  padding: 0;
+  margin-right: 0.75rem;
+}
+
+.entry-card .edit:hover { color: #d9ab5f; }
+
+.entry-card .buttons {
+  display: flex;
+  align-items: center;
+}
+
+#search-input {
+  margin-top: 1rem;
+}
+
+.bank-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.bank-actions button {
+  flex: 1;
+  font-size: 0.72rem;
+}
+
+.hidden { display: none; }
+
+.consistency-badge {
+  font-family: "Courier New", monospace;
+  font-size: 0.68rem;
+  padding: 1px 7px;
+  border-radius: 10px;
+  margin-left: 0.5rem;
+}
+
+.consistency-high { background: var(--sage); color: #14210f; }
+.consistency-mid { background: var(--brass); color: #2a1c06; }
+.consistency-low { background: #b06a6a; color: #2a0e0e; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-backdrop.hidden { display: none; }
+
+.modal {
+  background: var(--ink-soft);
+  border: 1px solid #2a3140;
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  width: min(520px, 90vw);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  margin-top: 0;
+  font-size: 1.05rem;
+}
+
+.no-results {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
