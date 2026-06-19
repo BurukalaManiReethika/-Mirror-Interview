@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mirror Interview</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>Mirror Interview</h1>
+    <p class="tagline">Practice out loud. Catch yourself drifting before a recruiter does.</p>
+  </header>
+
+  <main class="layout">
+    <!-- LEFT: Practice panel -->
+    <section class="panel practice-panel">
+      <h2>Practice an answer</h2>
+
+      <label for="theme-input">Theme</label>
+      <input list="theme-options" id="theme-input" placeholder="e.g. leadership, failure, conflict" />
+      <datalist id="theme-options"></datalist>
+
+      <label for="question-input">Question</label>
+      <input id="question-input" placeholder="e.g. Tell me about a time you led a team" />
+
+      <label for="answer-input">Your answer</label>
+      <textarea id="answer-input" rows="8" placeholder="Speak it out loud, then type or paste what you said..."></textarea>
+
+      <div class="actions">
+        <button id="compare-btn">Compare with past answer</button>
+        <button id="save-btn" class="primary">Save this answer</button>
+      </div>
+
+      <div id="compare-result" class="compare-result hidden">
+        <h3>How this compares to your last answer on this theme</h3>
+        <div class="compare-grid">
+          <div>
+            <h4>Past answer <span id="past-date"></span></h4>
+            <p id="past-answer" class="transcript"></p>
+          </div>
+          <div>
+            <h4>This attempt</h4>
+            <p id="new-answer" class="transcript"></p>
+          </div>
+        </div>
+        <p class="legend"><span class="hl-sample">highlighted</span> = words/phrases that also appear in your past answer</p>
+      </div>
+    </section>
+
+    <!-- RIGHT: Story bank -->
+    <section class="panel bank-panel">
+      <div class="bank-header">
+        <h2>Story bank</h2>
+        <span id="entry-count" class="count-badge">0 answers saved</span>
+      </div>
+      <div id="bank-list" class="bank-list">
+        <p class="empty-state">No answers saved yet. Practice one on the left to start building your bank.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
