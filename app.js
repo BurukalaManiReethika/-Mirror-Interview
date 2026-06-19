@@ -88,10 +88,22 @@ const newAnswerEl = document.getElementById("new-answer");
 const pastDateEl = document.getElementById("past-date");
 const bankList = document.getElementById("bank-list");
 const entryCount = document.getElementById("entry-count");
+const searchInput = document.getElementById("search-input");
+const exportBtn = document.getElementById("export-btn");
+const importBtn = document.getElementById("import-btn");
+const importFile = document.getElementById("import-file");
+
+const editModal = document.getElementById("edit-modal");
+const editTheme = document.getElementById("edit-theme");
+const editQuestion = document.getElementById("edit-question");
+const editAnswer = document.getElementById("edit-answer");
+const editCancel = document.getElementById("edit-cancel");
+const editSave = document.getElementById("edit-save");
+let editingId = null;
 
 function render() {
   renderThemeOptions();
-  renderBank();
+  renderBank(searchInput.value.trim().toLowerCase());
   entryCount.textContent = `${entries.length} answer${entries.length === 1 ? "" : "s"} saved`;
 }
 
@@ -100,14 +112,58 @@ function renderThemeOptions() {
   themeOptions.innerHTML = themes.map((t) => `<option value="${t}"></option>`).join("");
 }
 
-function renderBank() {
+function consistencyScore(theme) {
+  const norm = normalizeTheme(theme);
+  const themeEntries = entries
+    .filter((e) => normalizeTheme(e.theme) === norm)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (themeEntries.length < 2) return null;
+
+  const [latest, prev] = themeEntries;
+  const tokensA = new Set(tokenize(latest.answer).filter((w) => !STOPWORDS.has(w)));
+  const tokensB = new Set(tokenize(prev.answer).filter((w) => !STOPWORDS.has(w)));
+
+  if (tokensA.size === 0 || tokensB.size === 0) return null;
+
+  let intersection = 0;
+  for (const t of tokensA) if (tokensB.has(t)) intersection++;
+  const union = new Set([...tokensA, ...tokensB]).size;
+
+  return Math.round((intersection / union) * 100);
+}
+
+function consistencyBadgeHtml(score) {
+  if (score === null) return "";
+  let cls = "consistency-low";
+  if (score >= 60) cls = "consistency-high";
+  else if (score >= 35) cls = "consistency-mid";
+  return `<span class="consistency-badge ${cls}" title="Word overlap between your two most recent answers on this theme">${score}% consistent</span>`;
+}
+
+function renderBank(search = "") {
+  let visibleEntries = entries;
+  if (search) {
+    visibleEntries = entries.filter(
+      (e) =>
+        e.theme.toLowerCase().includes(search) ||
+        e.question.toLowerCase().includes(search) ||
+        e.answer.toLowerCase().includes(search)
+    );
+  }
+
   if (entries.length === 0) {
     bankList.innerHTML = `<p class="empty-state">No answers saved yet. Practice one on the left to start building your bank.</p>`;
     return;
   }
 
+  if (visibleEntries.length === 0) {
+    bankList.innerHTML = `<p class="no-results">No saved answers match "${escapeHtml(search)}".</p>`;
+    return;
+  }
+
   const byTheme = {};
-  for (const e of entries) {
+  for (const e of visibleEntries) {
     if (!byTheme[e.theme]) byTheme[e.theme] = [];
     byTheme[e.theme].push(e);
   }
@@ -120,6 +176,8 @@ function renderBank() {
         .slice()
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
+      const score = consistencyScore(theme);
+
       const cards = themeEntries
         .map(
           (e) => `
@@ -128,7 +186,10 @@ function renderBank() {
           <p class="a">${escapeHtml(truncate(e.answer, 160))}</p>
           <div class="meta">
             <span class="date">${formatDate(e.date)}</span>
-            <button class="delete" data-id="${e.id}">Delete</button>
+            <span class="buttons">
+              <button class="edit" data-id="${e.id}">Edit</button>
+              <button class="delete" data-id="${e.id}">Delete</button>
+            </span>
           </div>
         </div>`
         )
@@ -136,7 +197,7 @@ function renderBank() {
 
       return `
         <div class="theme-group">
-          <h3>${escapeHtml(theme)} (${themeEntries.length})</h3>
+          <h3>${escapeHtml(theme)} (${themeEntries.length})${consistencyBadgeHtml(score)}</h3>
           ${cards}
         </div>`;
     })
@@ -145,12 +206,96 @@ function renderBank() {
   bankList.querySelectorAll(".delete").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.getAttribute("data-id");
+      if (!confirm("Delete this saved answer?")) return;
       entries = entries.filter((e) => e.id !== id);
       saveEntries(entries);
       render();
     });
   });
+
+  bankList.querySelectorAll(".edit").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      openEditModal(id);
+    });
+  });
 }
+
+function openEditModal(id) {
+  const entry = entries.find((e) => e.id === id);
+  if (!entry) return;
+  editingId = id;
+  editTheme.value = entry.theme;
+  editQuestion.value = entry.question;
+  editAnswer.value = entry.answer;
+  editModal.classList.remove("hidden");
+}
+
+function closeEditModal() {
+  editingId = null;
+  editModal.classList.add("hidden");
+}
+
+editCancel.addEventListener("click", closeEditModal);
+
+editSave.addEventListener("click", () => {
+  if (!editingId) return;
+  const entry = entries.find((e) => e.id === editingId);
+  if (!entry) return;
+
+  const theme = editTheme.value.trim();
+  const answer = editAnswer.value.trim();
+  if (!theme || !answer) {
+    alert("Theme and answer can't be empty.");
+    return;
+  }
+
+  entry.theme = theme;
+  entry.question = editQuestion.value.trim();
+  entry.answer = answer;
+  saveEntries(entries);
+  closeEditModal();
+  render();
+});
+
+searchInput.addEventListener("input", () => render());
+
+exportBtn.addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(entries, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `mirror-interview-export-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+importBtn.addEventListener("click", () => importFile.click());
+
+importFile.addEventListener("change", () => {
+  const file = importFile.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+      if (!Array.isArray(imported)) throw new Error("Not an array");
+
+      const existingIds = new Set(entries.map((e) => e.id));
+      const merged = imported.filter((e) => e && e.id && e.theme && e.answer && !existingIds.has(e.id));
+
+      entries = [...entries, ...merged];
+      saveEntries(entries);
+      render();
+      alert(`Imported ${merged.length} new answer${merged.length === 1 ? "" : "s"}.`);
+    } catch (e) {
+      alert("Couldn't read that file — make sure it's a JSON export from Mirror Interview.");
+    }
+    importFile.value = "";
+  };
+  reader.readAsText(file);
+});
 
 function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
